@@ -131,8 +131,8 @@ Gazebo Plugin 配置包含：
 
 | 传感器 | 话题 | 融合维度 |
 |--------|------|----------|
-| Wheel Odometry | /odom/unfiltered | x, yaw, vx, vyaw |
-| IMU | /imu/data | vyaw |
+| Wheel Odometry | /odom/unfiltered | yaw, vx, vyaw |
+| IMU | /imu/data | ax, ay, vyaw |
 
 **输出：**
 
