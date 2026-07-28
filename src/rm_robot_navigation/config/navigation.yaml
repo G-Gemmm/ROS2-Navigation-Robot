@@ -1,0 +1,447 @@
+amcl:
+  ros__parameters:
+    # 1-2表示平移噪声影响强度，3-4表示旋转噪声影响强度，5表示侧向噪声
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.0
+    # 机器人中心参考坐标系
+    base_frame_id: "base_footprint"
+    # 激光跳跃不开启（本项目作为静止环境地图中执行，若使用动态地图，需要开启）
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    # 全局坐标系，激光范围，激光匹配模型
+    global_frame_id: "map"
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 100.0
+    laser_min_range: -1.0
+    laser_model_type: "likelihood_field"
+    # 最大激光束数，最大粒子数，最小粒子数
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    # 里程计坐标系，粒子滤波器误差（与定位精准度相关），全局定位恢复（关闭是因为本项目作为静止环境地图中执行，机器人不会人为的移动）
+    odom_frame_id: "odom"
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    # 运动模型决定机器人如何运动，保存姿态频率0.5Hz，激光测距误差，tf发布保证导航正常进行
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    # tf查询允许时间1.5s，角度变换至少0.2rad，距离变换至少0.25m才更新tf
+    transform_tolerance: 1.5
+    update_min_a: 0.2
+    update_min_d: 0.25
+    # 激光击中相信权重0.8，最大里程权重0.05，随机权重0.10，短距离（提前障碍）权重0.05
+    # 订阅激光扫描话题scan
+    z_hit: 0.8
+    z_max: 0.05
+    z_rand: 0.10
+    z_short: 0.05
+    scan_topic: scan
+
+bt_navigator:
+  ros__parameters:
+    # 全局坐标系，机器人中心参考坐标系，里程计话题
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+    # 行为树执行循环时间10ms/次，等待导航服务器响应时间20s,等待ROS其他服务响应时间5s，执行导航全局时间3600s
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    wait_for_service_timeout: 5000
+    action_server_result_timeout: 3600.0
+    # 导航插件
+    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigate_to_pose:
+      plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
+    navigate_through_poses:
+      plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
+    error_code_names:
+      - compute_path_error_code
+      - follow_path_error_code
+
+controller_server:
+  ros__parameters:
+    # 控制器频率，等待costmap更新超时时间0.3s
+    controller_frequency: 20.0
+    costmap_update_timeout: 0.3
+    # 最小速度阈值 
+    min_x_velocity_threshold: 0.0001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.0001
+    # controller计算失败后，允许的失败时间0.3s
+    failure_tolerance: 0.3
+    # 进度检查插件 目标检查插件 路径跟随插件
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+    # 不使用实时优先级
+    use_realtime_priority: false
+    # 进度检查插件，要求机器人在10s内移动0.1m，否则认为导航失败
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.1
+      movement_time_allowance: 10.0
+    # 目标检查插件，要求机器人到达目标点0.15m内，角度在0.15rad内
+    general_goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+      stateful: true
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 0.15
+    FollowPath:
+      # 启动调节插件，在启动时角度大于0.5236rad时，先进行旋转调节角度，小于0.2618rad时，再进行路径跟随（滞环设计）
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      angular_dist_threshold: 0.5236
+      angular_disengage_threshold: 0.2618
+      # 前向采样距离0.5m，旋转角速度2.4rad/s，最大角加速度3.2，模拟未来2s
+      forward_sampling_distance: 0.5
+      rotate_to_heading_angular_vel: 2.4
+      max_angular_accel: 3.2
+      simulate_ahead_time: 2.0
+      # 到达目标点后，旋转到目标点角度，在启动时，只进行一次旋转
+      rotate_to_goal_heading: true
+      rotate_to_heading_once: true
+      use_path_orientations: false
+      # 路径跟随插件RPP，在启动前旋转好角度，再进行路径跟随
+      primary_controller: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      # 目标速度0.4m/s，前向预测距离0.6m，最小预测距离0.3m，最大预测距离0.9m，预测时间1.5s
+      desired_linear_vel: 0.4
+      lookahead_dist: 0.6
+      min_lookahead_dist: 0.3
+      max_lookahead_dist: 0.9
+      lookahead_time: 1.5
+      # TF发布数据的延迟0.1s
+      transform_tolerance: 0.1
+      # 启用速度缩放，根据预测距离调整速度，距离目的地小于0.6m时，开始减速，最小速度0.05m/s
+      use_velocity_scaled_lookahead_dist: true
+      min_approach_linear_velocity: 0.05
+      approach_velocity_scaling_dist: 0.6
+      # 启用碰撞检测，预测未来1.0s内是否发生碰撞，加强减速激进
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.0
+      # 开启根据代价地图曲率减速，当曲率半径小于0.9m时，开始减速，最小速度0.05m/s
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 0.9
+      regulated_linear_scaling_min_speed: 0.05
+      # 不使用固定曲率预测距离，根据代价地图曲率调整预测距离，预测距离0.6m
+      use_fixed_curvature_lookahead: false
+      curvature_lookahead_dist: 0.6
+      # 使用先旋转再移动的策略，允许倒车(为后面作泊车做准备)
+      use_rotate_to_heading: true
+      allow_reversing: false
+      rotate_to_heading_min_angle: 0.785
+      max_angular_accel: 3.2
+      max_robot_pose_search_dist: 10.0
+      stateful: true
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      # 更新地图频率和发布在ROS话题的频率，默认单位为Hz
+      update_frequency: 10.0
+      publish_frequency: 2.0
+      # 与下面滚动窗口相关联，需要使用odom坐标系，机器人中心坐标系
+      global_frame: odom
+      robot_base_frame: base_footprint
+      # 使用滚动窗口更新地图(5*5 分辨率0.05)，costmap跟随机器人移动
+      # width和height为int类型
+      rolling_window: true
+      width: 5
+      height: 5
+      resolution: 0.05
+      # 机器人半径0.15
+      robot_radius: 0.15
+      # 启用插件voxel_layer和inflation_layer 避障层和膨胀层
+      # 障碍物膨胀0.3m 指数衰减系数3.0
+      plugins: ["voxel_layer","inflation_layer"]
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.6
+        enabled: true
+      voxel_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: true
+        publish_voxel_map: true
+        # voxel从地图0.0开始，z轴分辨率0.05，20个voxel高度
+        # 最大障碍物高度1.5m，标记阈值0.0，从激光雷达获取障碍物数据
+        origin_z: 0.0
+        z_resolution: 0.05
+        z_voxels: 20
+        max_obstacle_height: 2.0
+        mark_threshold: 0
+        observation_sources: scan
+        # 从激光雷达获取障碍物数据
+        # 最大障碍物高度2.0m，标记阈值0.0
+        # 障碍物检测最大范围2.5m，最小范围0.0m
+        # 障碍物清除范围3.0m，最小范围0.15m（避免误将机器人线束为障碍物）
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      # 全局代价地图更新频率和发布在ROS话题的频率，默认单位为Hz
+      # 世界坐标系和机器人中心坐标系
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      global_frame: map
+      robot_base_frame: base_footprint
+      # 机器人半径0.15，地图分辨率0.05，全局代价地图保持未知区域，不把位置区域当作是可通行区域
+      robot_radius: 0.15
+      resolution: 0.05
+      track_unknown_space: true
+      # 启用插件static_layer obstacle_layer inflation_layer 静态层和障碍物层和膨胀层
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.6
+      always_send_full_costmap: true
+
+# 概率地图保存为静态地图
+map_saver:
+  ros__parameters:
+    # 保存地图响应时间5s，小于0.25认为free，大于0.65认为occupied，否则认为unknown区域
+    # 保存最后一张地图，可以让订阅者接收到最新的地图
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+    map_subscribe_transient_local: true
+
+# 路径规划器，使用SMAC规划器，路径更新频率20Hz，响应时间1s
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 20.0
+    planner_plugins: ["GridBased"]
+    costmap_update_timeout: 1.0
+    GridBased:
+      plugin: "nav2_smac_planner::SmacPlanner2D"
+      # 目的地点允许误差在0.5m，不降低代价地图分辨率，保持原来的1倍分辨率
+      tolerance: 0.5
+      downsample_costmap: false
+      downsampling_factor: 1
+      # 在已有地图的情况下，不需要探索未知区域，最大搜索节点数1000000，接近目的点允许额外搜索10000个节点，最大规划时间8s，使用VON_NEUMANN运动模型
+      allow_unknown: false
+      max_iterations: 1000000
+      max_on_approach_iterations: 10000
+      # 最大规划时间2s，使用VON_NEUMANN运动模型（允许4向搜索），代价权重8.0，路径最终方向不需要与目的方向一致
+      max_planning_time: 8.0
+      motion_model_for_search: "VON_NEUMANN"
+      cost_travel_multiplier: 2.0
+      use_final_approach_orientation: false
+
+# planner_server:
+#   ros__parameters:
+#     expected_planner_frequency: 20.0
+#     planner_plugins: ["GridBased"]
+#     costmap_update_timeout: 1.0
+#     GridBased:
+#       plugin: "nav2_navfn_planner::NavfnPlanner"
+#       tolerance: 0.5
+#       use_astar: false
+#       allow_unknown: true
+
+# 路径平滑器，使用SimpleSmoother
+smoother_server:
+  ros__parameters:
+    smoother_plugins: ["simple_smoother"]
+    # 两次路径相差小于1e-10时，认为路径平滑完成，最大迭代次数1000次，
+    simple_smoother:
+      plugin: "nav2_smoother::SimpleSmoother"
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: true
+
+behavior_server:
+  ros__parameters:
+    # 话题名称
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
+    # 周期频率10Hz,插件名字
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    spin:
+      plugin: "nav2_behaviors::Spin"
+    backup:
+      plugin: "nav2_behaviors::BackUp"
+    drive_on_heading:
+      plugin: "nav2_behaviors::DriveOnHeading"
+    wait:
+      plugin: "nav2_behaviors::Wait"
+    assisted_teleop:
+      plugin: "nav2_behaviors::AssistedTeleop"
+    # 全局地图坐标系，局部地图坐标系和机器人中心坐标系
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_footprint
+    # tf响应允许时间0.2s，模拟未来2s的路径
+    # 速度与加速度限制
+    transform_tolerance: 0.2
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+
+# 路径跟随器，使用WaitAtWaypoint
+waypoint_follower:
+  ros__parameters:
+    # 检测当前航点任务频率20Hz，不因为一个航点任务失败而停止导航，整个导航任务时间3600s
+    loop_rate: 20
+    stop_on_failure: false
+    action_server_result_timeout: 3600.0
+    waypoint_task_executor_plugin: "wait_at_waypoint"
+    # 航点任务停留时间200ms
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+      enabled: True
+      waypoint_pause_duration: 200
+
+# 速度平滑器
+velocity_smoother:
+  ros__parameters:
+    # 速度平滑器频率20Hz，不因为一个方向速度超出阈值而按比例缩放所有速度，采用闭环控制速度
+    smoothing_frequency: 20.0
+    scale_velocities: False
+    feedback: "CLOSED_LOOP"
+    # 速度和加速度限制
+    max_velocity: [0.5, 0.0, 2.5]
+    min_velocity: [-0.5, 0.0, -2.5]
+    max_accel: [2.5, 0.0, 3.2]
+    max_decel: [-2.5, 0.0, -3.2]
+    # 闭环反馈读取0.1s内的话题odom，不设置死区速度
+    odom_topic: "/odometry/filtered"
+    odom_duration: 0.1
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0
+
+# 碰撞检测器
+collision_monitor:
+  ros__parameters:
+    # 坐标系ID和话题名称
+    base_frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    cmd_vel_in_topic: "cmd_vel_smoothed"
+    cmd_vel_out_topic: "cmd_vel"
+    state_topic: "collision_monitor_state"
+    transform_tolerance: 0.2
+    source_timeout: 1.0
+    base_shift_correction: True
+    stop_pub_timeout: 2.0
+    polygons: ["FootprintApproach"]
+    FootprintApproach:
+      type: "polygon"
+      action_type: "approach"
+      footprint_topic: "/local_costmap/published_footprint"
+      time_before_collision: 1.2
+      simulation_time_step: 0.1
+      min_points: 6
+      visualize: False
+      enabled: True
+    # 障碍物来源，使用激光雷达
+    observation_sources: ["scan"]
+    scan:
+      type: "scan"
+      topic: "scan"
+      min_height: 0.15
+      max_height: 2.0
+      enabled: True
+
+# 停靠服务
+docking_server: 
+  ros__parameters:
+    # 停靠服务频率50Hz，检测充电桩时间5s,等待充电成功反馈5s，最大靠近时间30s
+    controller_frequency: 50.0
+    initial_perception_timeout: 5.0
+    wait_charge_timeout: 5.0
+    dock_approach_timeout: 30.0
+    # 离开充电桩时，最少距离0.05m，最小角度0.1rad，失败尝试次数3次
+    undock_linear_tolerance: 0.05
+    undock_angular_tolerance: 0.1
+    max_retries: 3
+    base_frame: "base_footprint"
+    fixed_frame: "odom"
+    dock_backwards: false
+    dock_prestaging_tolerance: 0.5
+    # 停靠插件，使用SimpleChargingDock
+    dock_plugins: ['simple_charging_dock']
+    simple_charging_dock:
+      plugin: 'opennav_docking::SimpleChargingDock'
+      # 停靠阈值0.05m，先停靠在充电桩0.7m位置，再缓缓进入
+      docking_threshold: 0.05
+      staging_x_offset: -0.7
+      # 使用外部检测充电桩位置例如相机检测（若false，则使用依靠已有的地图信息）
+      # 电池状态检测，通过检测电池状态判断是否处于充电（若false）
+      # 电机状态检测，检测电机的状态判断是否和充电桩接触成功
+      use_external_detection_pose: true
+      use_battery_status: false
+      use_stall_detection: false
+      # 相机检测响应时间阈值1s，相机位姿与机器人中心的偏移量
+      external_detection_timeout: 1.0
+      external_detection_translation_x: -0.18
+      external_detection_translation_y: 0.0
+      external_detection_rotation_roll: -1.57
+      external_detection_rotation_pitch: -1.57
+      external_detection_rotation_yaw: 0.0
+      filter_coef: 0.1
+      # 控制器参数，角度误差比例系数，距离误差比例系数（类似于PID中的P）
+    controller:
+      k_phi: 3.0
+      k_delta: 2.0
+      # 充电桩停靠时，固定速度为0.15m/s，开启碰撞检测
+      v_linear_min: 0.15
+      v_linear_max: 0.15
+      use_collision_detection: true
+      # 代价地图话题，机器人中心坐标系话题
+      costmap_topic: "local_costmap/costmap_raw"
+      footprint_topic: "local_costmap/published_footprint"
+      # tf响应允许时间0.1s，模拟未来5s的路径，碰撞安全距离0.3m
+      transform_tolerance: 0.1
+      projection_time: 5.0
+      simulation_step: 0.1
+      dock_collision_threshold: 0.3
+
+loopback_simulator:
+  ros__parameters:
+    base_frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    map_frame_id: "map"
+    scan_frame_id: "base_scan"  
+    update_duration: 0.02

@@ -1,0 +1,83 @@
+slam_toolbox:
+  ros__parameters:
+
+    # SLAM优化器算法参数
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # ROS坐标系参数和话题名称
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_footprint
+    scan_topic: /scan
+    # SLAM模式为建图模式
+    mode: mapping 
+
+    # 继续在已有地图基础上进行建图，或者从充电桩开始继续建图
+    # 需要给定以下的参数：继续继续建图的原地图文件名、继续继续建图的原地图起始位姿、是否从充电桩开始继续建图
+    # 注意，map_start_pose和map_start_at_dock不能同时给定
+    #map_file_name: test_steve
+    # map_start_pose: [0.0, 0.0, 0.0]
+    #map_start_at_dock: true
+
+    # 输出调试日志，对每一帧激光雷达数据进行处理，控制map-->odom的tf发布时间
+    debug_logging: true
+    throttle_scans: 1
+    transform_publish_period: 0.05 #if 0 never publishes odometry
+    # 地图更新周期和地图分辨率，雷达最大范围，最小时间间隔，变换超时时间，tf缓冲区持续时间
+    map_update_interval: 0.5
+    resolution: 0.05
+    max_laser_range: 10.0 #for rastering images
+    minimum_time_interval: 0.5
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.0
+    # 程序需要更大的栈大小来序列化大型地图，开启rviz交互模式，方便可视化地图
+    stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
+    enable_interactive_mode: true
+
+    # 通用slam参数
+    # 开启扫描匹配，开启激光点云的质心匹配，机器人更新节点的距离/角度阈值
+    use_scan_matching: true
+    use_scan_barycenter: true
+    minimum_travel_distance: 0.5
+    minimum_travel_heading: 0.5
+    # 保存10帧激光雷达数据，雷达最大扫描距离10m
+    scan_buffer_size: 10
+    scan_buffer_maximum_scan_distance: 10.0
+    link_match_minimum_response_fine: 0.1  
+    link_scan_maximum_distance: 1.5
+    loop_search_maximum_distance: 3.0
+    # 开启回环检测，用于建立完整的闭环地图
+    do_loop_closing: true 
+    loop_match_minimum_chain_size: 10
+    # 回环检测的最大允许方差，用于判断是否为回环，回环判定阈值
+    loop_match_maximum_variance_coarse: 3.0  
+    loop_match_minimum_response_coarse: 0.35    
+    loop_match_minimum_response_fine: 0.45
+
+    # 相关性参数，搜索范围0.5^2，搜索分辨率0.01，障碍物进行高斯扩散0.1m
+    # 当前帧和当前地图的相关
+    correlation_search_space_dimension: 0.5
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.1 
+
+    # 回环检测相关，当前区域和历史地图的相关
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+
+    # 雷达扫描匹配参数
+    # 距离权重和角度权重
+    distance_variance_penalty: 0.5      
+    angle_variance_penalty: 1.0    
+    # 细角度搜索偏移量，粗角度搜索偏移量，粗角度分辨率，最小角度惩罚，最小距离惩罚，使用响应扩展
+    fine_search_angle_offset: 0.00349     
+    coarse_search_angle_offset: 0.349   
+    coarse_angle_resolution: 0.0349        
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true

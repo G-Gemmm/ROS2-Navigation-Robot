@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:include filename="$(find rm_robot_description)/urdf/common_inertia.urdf.xacro" />
+   
+   <xacro:macro name="base_xacro" params="radius length">
+       <!-- base_link 机器人基座链接 -->
+       <link name="base_link" >
+            <!-- 部件外观描述 -->
+            <!-- visual属于虚拟可视化部件,不参与运动学计算 -->
+            <visual>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 圆柱体 radius 半径/m length 高度/m -->
+                    <cylinder radius="${radius}" length="${length}" />
+                </geometry>
+                <!-- 材质颜色透明度 -->
+                <material name="yellow_base" >
+                    <color rgba="1.0 0.5 0.0 1.0" />    
+                </material>
+            </visual>
+            <!-- collision 碰撞检测 ,参与运动学计算 -->
+            <collision>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 圆柱体 radius 半径/m length 高度/m -->
+                    <cylinder radius="${radius}" length="${length}" />
+                </geometry>
+            </collision>
+            <!-- 惯性矩阵 -->
+            <xacro:cylinder_inertia m="1.0" r="${radius}" h="${length}" />
+        </link> 
+
+        <!-- base_footprint 机器人基座z=0的投影 -->
+        <!-- 增加惯性矩阵，避免gazebo模拟中出现警告，不会对实际的运动学计算产生影响 -->
+        <link name="base_footprint" >
+            <inertial>
+                <mass value="0.001" />
+                <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+            </inertial>
+        </link>
+
+        <!-- base_link相对于base_footprint的固定关节 -->
+        <joint name="base_to_base_footprint_joint" type="fixed" >
+            <parent link="base_footprint" />
+            <child link="base_link" />
+            <origin xyz="0.0 0.0 0.092" rpy="0.0 0.0 0.0" />
+        </joint>
+
+    </xacro:macro>   
+</robot>

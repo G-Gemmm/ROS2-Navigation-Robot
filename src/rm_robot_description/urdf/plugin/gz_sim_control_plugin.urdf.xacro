@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:macro name="gz_sim_control_plugin">
+        <gazebo>
+            <!-- 官方插件名字 + 官方配置插件 -->
+            <plugin name="gz::sim::systems::DiffDrive" filename="libgz-sim-diff-drive-system.so">
+                <!-- 左右轮关节 -->
+                <left_joint>left_wheel_to_base_joint</left_joint>
+                <right_joint>right_wheel_to_base_joint</right_joint>
+                <!-- 左右轮间距 -->
+                <wheel_separation>0.2</wheel_separation>
+                <!-- 左右轮半径 -->
+                <wheel_radius>0.032</wheel_radius>
+                <!-- 最大线性加速度 -->
+                <max_linear_acceleration>0.5</max_linear_acceleration>
+                <!-- 最大线性速度 -->cd 
+                <max_linear_velocity>0.5</max_linear_velocity>
+                <!-- 最大角速度 -->
+                <max_angular_velocity>1.0</max_angular_velocity>
+                <!-- odom发布频率为50Hz -->
+                <odom_publisher_frequency>50</odom_publisher_frequency>
+                <!-- odom坐标系作为机器人运动估计的参考-->
+                <!-- 发布odom->base_footprint的TF变换 -->
+                <frame_id>odom</frame_id>
+                <child_frame_id>base_footprint</child_frame_id>
+                <!-- 里程计的位置输出到odom/unfiltered,保留odom原始数据,不进行过滤,便于EKF使用 -->
+                <odom_topic>/odom/unfiltered</odom_topic>
+                <!-- 里程计的速度输出到cmd_vel,保留cmd_vel原始数据,不进行过滤,便于EKF使用 -->
+                <topic>/cmd_vel</topic>
+            </plugin>
+        </gazebo>
+
+        <gazebo>
+            <!-- 官方插件名字 + 官方配置插件 -->
+            <plugin name="gz::sim::systems::JointStatePublisher" filename="libgz-sim-joint-state-publisher-system.so">
+                <!-- 发布关节状态到joint_states话题 -->
+                <topic>joint_states</topic>
+                <!-- 更新频率为50Hz，使得在rviz中机器人的运动更平滑 -->
+                <update_rate>50</update_rate>
+            </plugin>
+        </gazebo>
+    </xacro:macro>
+</robot>

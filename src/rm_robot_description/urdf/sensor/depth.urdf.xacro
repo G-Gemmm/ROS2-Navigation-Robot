@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:include filename="$(find rm_robot_description)/urdf/common_inertia.urdf.xacro" />
+   <!-- 传入参数xyz,用于指定depth深度相机在机器人基座中的位置 -->
+   <xacro:macro name="depth_xacro" params="xyz">
+       <!-- depth 深度相机 -->
+       <link name="depth_link" >
+            <!-- 部件外观描述 -->
+            <!-- visual属于虚拟可视化部件,不参与运动学计算 -->
+            <visual>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 立方体 size 长宽高/m-->
+                    <box size="0.02 0.10 0.02" />
+                </geometry>
+                <!-- 材质颜色透明度 -->
+                <material name="red_depth" >
+                    <color rgba="1.0 0.0 0.0 1.0" />    
+                </material>
+            </visual>
+            <!-- collision 碰撞检测 ,参与运动学计算 -->
+            <collision>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 立方体 size 长宽高/m-->
+                    <box size="0.02 0.10 0.02" />
+                </geometry>
+            </collision>
+            <!-- 惯性矩阵 -->
+            <xacro:box_inertia m="0.10" w="0.02" h="0.10" d="0.02" />
+        </link> 
+        <!-- depth_link 深度相机相对于base_link的固定关节 -->
+        <joint name="depth_to_base_joint" type="fixed" >
+            <parent link="base_link" />
+            <child link="depth_link" />
+            <origin xyz="${xyz}" rpy="0.0 0.0 0.0" />
+        </joint>
+    </xacro:macro>   
+</robot>

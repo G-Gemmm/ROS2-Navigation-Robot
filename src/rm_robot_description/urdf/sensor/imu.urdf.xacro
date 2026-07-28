@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:include filename="$(find rm_robot_description)/urdf/common_inertia.urdf.xacro" />
+   <!-- 传入参数xyz,用于指定imu 传感器在机器人基座中的位置 -->
+   <xacro:macro name="imu_xacro" params="xyz">
+       <!-- imu 传感器 -->
+       <link name="imu_link" >
+            <!-- 部件外观描述 -->
+            <!-- visual属于虚拟可视化部件,不参与运动学计算 -->
+            <visual>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 立方体 size 长宽高/m-->
+                    <box size="0.02 0.02 0.02" />
+                </geometry>
+                <!-- 材质颜色透明度 -->
+                <material name="black_imu" >
+                    <color rgba="0.0 0.0 0.0 1.0" />    
+                </material>
+            </visual>
+            <!-- collision 碰撞检测 ,参与运动学计算 -->
+            <collision>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 立方体 size 长宽高/m-->
+                    <box size="0.02 0.02 0.02" />
+                </geometry>
+            </collision>
+            <!-- 惯性矩阵 -->
+            <xacro:box_inertia m="0.02" w="0.02" h="0.02" d="0.02" />
+        </link> 
+        <!-- imu_link 传感器相对于base_link的固定关节 -->
+        <joint name="imu_to_base_joint" type="fixed" >
+            <parent link="base_link" />
+            <child link="imu_link" />
+            <origin xyz="${xyz}" rpy="0.0 0.0 0.0" />
+        </joint>
+    </xacro:macro>   
+</robot>

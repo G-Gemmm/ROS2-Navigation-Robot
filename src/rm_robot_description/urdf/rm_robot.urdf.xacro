@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="rm_robot">
+
+<!-- 机器人底盘base -->
+<xacro:include filename="$(find rm_robot_description)/urdf/base/base.urdf.xacro"/>
+<!-- 机器人传感器 -->
+<xacro:include filename="$(find rm_robot_description)/urdf/sensor/depth.urdf.xacro"/>
+<xacro:include filename="$(find rm_robot_description)/urdf/sensor/imu.urdf.xacro"/>
+<xacro:include filename="$(find rm_robot_description)/urdf/sensor/laser.urdf.xacro"/>
+<!-- 机器人执行器 -->
+<xacro:include filename="$(find rm_robot_description)/urdf/actuator/wheel.urdf.xacro"/>
+<xacro:include filename="$(find rm_robot_description)/urdf/actuator/caster.urdf.xacro"/>
+<!-- 插件配置 -->
+<xacro:include filename="$(find rm_robot_description)/urdf/plugin/gz_sim_sensor_plugin.urdf.xacro"/>
+<xacro:include filename="$(find rm_robot_description)/urdf/plugin/gz_sim_control_plugin.urdf.xacro"/>
+<!-- 配置机器人关节 -->
+<xacro:base_xacro radius="0.10" length="0.12" />
+<xacro:imu_xacro xyz="0.0 0.0 0.0" />
+<xacro:depth_xacro xyz="0.05 0.0 0.07" />
+<xacro:laser_xacro xyz="0.0 0.0 0.11" />
+<xacro:wheel_xacro wheel_name="left_wheel" xyz="0.0 0.1 -0.06" />
+<xacro:wheel_xacro wheel_name="right_wheel" xyz="0.0 -0.1 -0.06" />
+<xacro:caster_xacro caster_name="front_caster" xyz="0.084 0.0 -0.076" />
+<xacro:caster_xacro caster_name="rear_caster" xyz="-0.084 0.0 -0.076" />
+<!-- 启动插件 -->
+<xacro:gz_sim_control_plugin />
+<xacro:gz_sim_sensor_plugin />
+
+</robot>

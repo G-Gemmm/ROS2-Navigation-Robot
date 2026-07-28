@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:include filename="$(find rm_robot_description)/urdf/common_inertia.urdf.xacro" />
+   <!-- 传入参数xyz,用于指定wheel在机器人基座中的位置 -->
+   <!-- 传入参数wheel_name,可以创建多个wheel -->
+   <xacro:macro name="wheel_xacro" params="xyz wheel_name">
+       <!-- wheel -->
+       <link name="${wheel_name}_link" >
+            <!-- 部件外观描述 -->
+            <!-- visual属于虚拟可视化部件,不参与运动学计算 -->
+            <visual>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="1.570796 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 圆柱体 radius 半径/m length 长度/m-->
+                    <cylinder radius="0.032" length="0.04" />
+                </geometry>
+                <!-- 材质颜色透明度 -->
+                <material name="blue_wheel" >
+                    <color rgba="0.0 0.0 1.0 1.0" />    
+                </material>
+            </visual>
+
+            <!-- collision 碰撞检测 ,参与运动学计算 -->
+            <collision>
+                <!-- 沿自身几何中心的偏差 -->
+                <origin xyz="0.0 0.0 0.0" rpy="1.570796 0.0 0.0" />
+                <!-- 几何形状 -->
+                <geometry>
+                    <!-- 圆柱体 radius 半径/m length 长度/m-->
+                    <cylinder radius="0.032" length="0.04" />
+                </geometry>
+            </collision>
+            <!-- 惯性矩阵 -->
+            <xacro:cylinder_inertia m="0.05" r="0.032" h="0.04" />           
+        </link> 
+
+        <!-- wheel相对于base_link的固定关节 -->
+        <joint name="${wheel_name}_to_base_joint" type="continuous" >
+            <parent link="base_link" />
+            <child link="${wheel_name}_link" />
+            <origin xyz="${xyz}" rpy="0.0 0.0 0.0" />
+            <axis xyz="0.0 1.0 0.0" />
+        </joint>
+
+         <!-- 机器人关节参数，用于物理模拟 -->
+         <!-- 如果想要使得模拟结果更真实，需要调整关节参数 -->
+        <gazebo reference="${wheel_name}_link" >
+            <mu1 value="20.0" />
+            <mu2 value="20.0" />
+            <kp value="1000000000.0" />
+            <kd value="1.0" />
+        </gazebo>
+    </xacro:macro>   
+</robot>

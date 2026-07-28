@@ -1,0 +1,7 @@
+# ROS 2 编译和日志产物
+build/
+install/
+log/
+
+# IDE 配置文件
+.vscode/

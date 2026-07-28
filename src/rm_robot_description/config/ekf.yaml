@@ -1,0 +1,46 @@
+ekf_filter_node:
+  ros__parameters:
+    frequency: 50.0
+    two_d_mode: true
+    publish_tf: true
+    map_frame: map
+    base_link_frame: base_footprint
+    odom_frame: odom
+    world_frame: odom
+
+        #x     , y     , z,
+        #roll  , pitch , yaw,
+        #vx    , vy    , vz,
+        #vroll , vpitch, vyaw,
+        #ax    , ay    , az
+
+    odom0: /odom/unfiltered
+    odom0_config: [
+      false, false, false,
+      false, false, true ,
+      true,  false, false,
+      false, false, true ,
+      false, false, false
+    ]
+    # odom0_covariance: [0.0, 0.0, 0.0, 
+    #                    0.0, 0.0, 0.1, 
+    #                    0.5, 0.0, 0.0, 
+    #                    0.0, 0.0, 0.1, 
+    #                    0.0, 0.0, 0.0]
+                       
+    odom0_queue_size: 10
+    odom0_differential: false  
+    odom0_relative: false
+    
+    imu0: /imu/data
+    imu0_config: [
+      false, false, false,
+      false, false, false,
+      false, false, false,
+      false, false, true,
+      true , true , false
+    ]
+    imu0_remove_gravitational_acceleration: true
+    imu0_queue_size: 10
+    imu0_differential: false  
+    imu0_relative: false
