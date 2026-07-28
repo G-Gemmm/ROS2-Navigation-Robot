@@ -235,7 +235,7 @@ Local Costmap：5x5 滚动窗口，以 odom 为参考坐标系
 
 | 参数 | 值 | 作用 |
 |------|-----|------|
-| inflation_radius | 0.55 m | 扩展 11 个代价梯度格点 |
+| inflation_radius | 0.6 m | 扩展 12 个代价梯度格点 |
 | cost_scaling_factor | 5.0 | 控制代价衰减速度 |
 
 **Behavior Tree Navigator**
