@@ -1,7 +1,9 @@
 # ROS2 Navigation Robot
 
 基于 ROS2 Jazzy 的自主导航机器人项目复现。
+
 视频连接：https://www.bilibili.com/video/BV1N43z6EECp
+
 本项目参考开源项目 **linorobot2** 的整体架构，从零开始构建了一个完整的 2WD 差速仿真机器人导航系统。
 
 项目目标是搭建一个从机器人模型、仿真环境、传感器融合、SLAM 建图到 Nav2 自主导航的完整 Pipeline。
